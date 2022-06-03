@@ -1,7 +1,8 @@
-import { userModel } from '../db';
-
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { userModel } from '../db';
+
+const { OAuth2Client } = require('google-auth-library');
 
 class UserService {
   // 본 파일의 맨 아래에서, new UserService(userModel) 하면, 이 함수의 인자로 전달됨
@@ -12,7 +13,7 @@ class UserService {
   // 회원가입
   async addUser(userInfo) {
     // 객체 destructuring
-    const { email, fullName, password } = userInfo;
+    const { email, fullName, password, phoneNumber, address } = userInfo;
 
     // 이메일 중복 확인
     const user = await this.userModel.findByEmail(email);
@@ -27,7 +28,13 @@ class UserService {
     // 우선 비밀번호 해쉬화(암호화)
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUserInfo = { fullName, email, password: hashedPassword };
+    const newUserInfo = {
+      fullName,
+      email,
+      password: hashedPassword,
+      phoneNumber,
+      address,
+    };
 
     // db에 저장
     const createdNewUser = await this.userModel.create(newUserInfo);
@@ -72,6 +79,19 @@ class UserService {
     const token = jwt.sign({ userId: user._id, role: user.role }, secretKey);
 
     return { token };
+  }
+
+  // 소셜 로그인 (구글)
+  async verify(credential) {
+    const client = new OAuth2Client(process.env.GOOGLE_ClIENT_ID);
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_ClIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { email, name } = payload;
+    const isRegister = await this.userModel.findByEmail(email);
+    return { isRegister, email, fullName: name };
   }
 
   // 사용자 목록을 받음.

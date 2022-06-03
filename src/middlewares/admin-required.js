@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 
-function loginRequired(req, res, next) {
+// 어드민 확인 미들웨어 (토큰에 담긴 role을 확인함)
+function adminRequired(req, res, next) {
   // request 헤더로부터 authorization bearer 토큰을 받음.
   const userToken = req.headers.authorization?.split(' ')[1];
 
@@ -21,10 +22,18 @@ function loginRequired(req, res, next) {
     const secretKey = process.env.JWT_SECRET_KEY || 'secret-key';
     const jwtDecoded = jwt.verify(userToken, secretKey);
 
-    const { userId } = jwtDecoded;
+    const { role } = jwtDecoded;
 
-    // 라우터에서 req.currentUserId를 통해 유저의 id에 접근 가능하게 됨
-    req.currentUserId = userId;
+    if (role !== 'admin') {
+      res.status(403).json({
+        result: 'forbidden-approach',
+        reason: '관리자만 사용할 수 있는 서비스입니다.',
+      });
+      return;
+    }
+
+    // 라우터에서 req.currentUserRole 통해 유저의 role에 접근 가능하게 됨
+    req.currentUserRole = role;
 
     next();
   } catch (error) {
@@ -37,4 +46,4 @@ function loginRequired(req, res, next) {
   }
 }
 
-export { loginRequired };
+export { adminRequired };
