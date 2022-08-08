@@ -1,3 +1,5 @@
+https://www.youtube.com/watch?v=8kcYI9TUyQ8&t=8s&ab_channel=oobinss
+
 # 쇼핑몰 웹 서비스 프로젝트
 
 제품들을 조회하고, 장바구니에 추가하고, 또 주문을 할 수 있는 쇼핑몰 웹 서비스 제작 프로젝트입니다. <br />
